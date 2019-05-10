@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import DeleteBtn from "../components/DeleteBtn";
 import Jumbotron from "../components/Jumbotron";
 import API from "../utils/API";
-import { Link } from "react-router-dom";
 import { Col, Row, Container } from "../components/Grid";
 import { List, ListItem } from "../components/List";
 import { Input, FormBtn } from "../components/Form";
@@ -10,7 +9,7 @@ import "./style.css"
 
 class Books extends Component {
   state = {
-    title: "",
+    keywords: "",
     books: []
   };
 
@@ -23,11 +22,17 @@ class Books extends Component {
 
   handleFormSubmit = event => {
     event.preventDefault();
-    if (this.state.title) {
-      API.searchBooks(this.state.title)
+    if (this.state.keywords) {
+      API.searchBooks(this.state.keywords)
         .then(res => this.setState({ books: res.data.items}))
         .catch(err => console.log(err));
     }
+  };
+  
+  deleteBook = id => {
+    API.deleteBook(id)
+      .then(res => this.loadBooks())
+      .catch(err => console.log(err));
   };
 
   handleSaveEvent = (book) => {
@@ -39,6 +44,7 @@ class Books extends Component {
       image: book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : "",
       link: book.volumeInfo.infoLink
     }
+
     API.saveBook(newbook)
       .then(res => {
         let found = this.state.books.filter(x => x.id !== book.id);
@@ -61,13 +67,13 @@ class Books extends Component {
             </Jumbotron>
             <form>
               <Input
-                value={this.state.title}
+                value={this.state.keywords}
                 onChange={this.handleInputChange}
-                name="title"
+                name="keywords"
                 placeholder="Search Book"
               />
               <FormBtn
-                disabled={!this.state.title}
+                disabled={!this.state.keywords}
                 onClick={this.handleFormSubmit}
               >
                 Search Book
@@ -80,12 +86,8 @@ class Books extends Component {
             {this.state.books.length ? (
               <List>
                 {this.state.books.map(book => (
-                  <ListItem key={book._id}>
-                    <Link to={"/books/" + book._id}>
-                      <strong>
-                        {book.title}
-                      </strong>
-                    </Link>
+                  <ListItem key={book._id} id={book.id}>
+                      {book.volumeInfo.title}
                     <DeleteBtn onClick={() => this.deleteBook(book._id)} />
                   </ListItem>
                 ))}
